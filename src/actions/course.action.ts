@@ -299,10 +299,252 @@ export async function updateChapter({
     });
 
     // TODO: Handle Video update
+    if (data.videoUrl) {
+      const existingMuxData = await prisma.muxData.findFirst({
+        where: {
+          chapterId,
+        },
+      });
+
+      if (existingMuxData) {
+        await Video.Assets.del(existingMuxData.assetId);
+        await prisma.muxData.delete({
+          where: {
+            id: existingMuxData.id,
+          },
+        });
+      }
+
+      const asset = await Video.Assets.create({
+        input: data.videoUrl,
+        playback_policy: 'public',
+        test: false,
+      });
+
+      await prisma.muxData.create({
+        data: {
+          chapterId,
+          assetId: asset.id,
+          playbackId: asset.playback_ids?.[0]?.id,
+        },
+      });
+    }
 
     return chapter;
   } catch (error: any) {
     console.log('[CHAPTER UPDATE]', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function publishChapter({
+  courseId,
+  chapterId,
+}: {
+  courseId: string;
+  chapterId: string;
+}) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const ownCourse = await prisma.course.findMany({
+      where: {
+        id: courseId,
+        userId,
+      },
+    });
+
+    if (!ownCourse) {
+      throw new Error('Unauthorized');
+    }
+
+    const chapter = await prisma.chapter.findUnique({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+    });
+
+    const muxData = await prisma.muxData.findUnique({
+      where: {
+        chapterId,
+      },
+    });
+
+    if (
+      !chapter ||
+      !muxData ||
+      !chapter.title ||
+      !chapter.description ||
+      !chapter.videoUrl
+    ) {
+      throw new Error('Missing required fields');
+    }
+
+    const updateChapter = await prisma.chapter.update({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+      data: {
+        isPublished: true,
+      },
+    });
+
+    return updateChapter;
+  } catch (error: any) {
+    console.log('[CHAPTER PUBLISH]', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function unpublishChapter({
+  courseId,
+  chapterId,
+}: {
+  courseId: string;
+  chapterId: string;
+}) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const ownCourse = await prisma.course.findMany({
+      where: {
+        id: courseId,
+        userId,
+      },
+    });
+
+    if (!ownCourse) {
+      throw new Error('Unauthorized');
+    }
+
+    // 1. 해당 chapter를 unpublished로 변경
+    const unpublishedChapter = await prisma.chapter.update({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+      data: {
+        isPublished: false,
+      },
+    });
+
+    // 2. 해당 강의의 모든 chapter가 published가 되지 않았다면 해당 강의는 unpublished로 변경
+    const publishedChaptersInCourse = await prisma.chapter.findMany({
+      where: {
+        courseId,
+        isPublished: true,
+      },
+    });
+
+    if (publishedChaptersInCourse.length === 0) {
+      await prisma.course.update({
+        where: {
+          id: courseId,
+        },
+        data: {
+          isPublished: false,
+        },
+      });
+    }
+
+    return unpublishedChapter;
+  } catch (error: any) {
+    console.log('[CHAPTER UNPUBLISH]', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteChapter({
+  courseId,
+  chapterId,
+}: {
+  courseId: string;
+  chapterId: string;
+}) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const ownCourse = await prisma.course.findMany({
+      where: {
+        id: courseId,
+        userId,
+      },
+    });
+
+    if (!ownCourse) {
+      throw new Error('Unauthorized');
+    }
+
+    const chapter = await prisma.chapter.findUnique({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+    });
+
+    if (!chapter) {
+      throw new Error('Not Found');
+    }
+
+    //? 비디오 관련 데이터도 함게 제거해준다.
+    if (chapter.videoUrl) {
+      const existingMuxData = await prisma.muxData.findFirst({
+        where: {
+          chapterId,
+        },
+      });
+
+      if (existingMuxData) {
+        await Video.Assets.del(existingMuxData.assetId);
+        await prisma.muxData.delete({
+          where: {
+            id: existingMuxData.id,
+          },
+        });
+      }
+    }
+
+    const deletedChapter = await prisma.chapter.delete({
+      where: {
+        id: chapterId,
+      },
+    });
+
+    const publishedChaptersInCourse = await prisma.chapter.findMany({
+      where: {
+        courseId: courseId,
+        isPublished: true,
+      },
+    });
+
+    if (publishedChaptersInCourse.length === 0) {
+      await prisma.course.update({
+        where: {
+          id: courseId,
+        },
+        data: {
+          isPublished: false,
+        },
+      });
+    }
+
+    return deletedChapter;
+  } catch (error: any) {
+    console.log('[CHAPTER DELETE]', error);
     throw new Error(error.message);
   }
 }
