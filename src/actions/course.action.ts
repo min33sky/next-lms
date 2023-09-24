@@ -548,3 +548,142 @@ export async function deleteChapter({
     throw new Error(error.message);
   }
 }
+
+export async function publishCourse({ courseId }: { courseId: string }) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const course = await prisma.course.findUnique({
+      where: {
+        id: courseId,
+        userId,
+      },
+      include: {
+        chapters: {
+          include: {
+            muxData: true,
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      throw new Error('Not Found');
+    }
+
+    const hasPublishedChapter = course.chapters.every(
+      (chapter) => chapter.isPublished,
+    );
+
+    if (
+      !course.title ||
+      !course.description ||
+      !course.imageUrl ||
+      !course.categoryId ||
+      !hasPublishedChapter
+    ) {
+      throw new Error('Missing required fields');
+    }
+
+    const publishedCourse = await prisma.course.update({
+      where: {
+        id: courseId,
+        userId,
+      },
+      data: {
+        isPublished: true,
+      },
+    });
+
+    return publishedCourse;
+  } catch (error: any) {
+    console.log('[COURSES PUBLISH]', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function unpublishCourse({ courseId }: { courseId: string }) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const course = await prisma.course.findUnique({
+      where: {
+        id: courseId,
+        userId,
+      },
+    });
+
+    if (!course) {
+      throw new Error('Not Found');
+    }
+
+    const unpublishedCourse = await prisma.course.update({
+      where: {
+        id: courseId,
+        userId,
+      },
+      data: {
+        isPublished: false,
+      },
+    });
+
+    return unpublishedCourse;
+  } catch (error: any) {
+    console.log('[COURSES UNPUBLISH]', error);
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteCourse({ courseId }: { courseId: string }) {
+  try {
+    const { userId } = auth();
+
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const course = await prisma.course.findUnique({
+      where: {
+        id: courseId,
+        userId,
+      },
+      include: {
+        chapters: {
+          include: {
+            muxData: true,
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      throw new Error('Not Found');
+    }
+
+    //? 강의의 모든 챕터를 대상으로 비디오 관련 데이터도 함게 제거해준다.
+    for (const chapter of course.chapters) {
+      if (chapter.muxData?.assetId) {
+        await Video.Assets.del(chapter.muxData.assetId);
+      }
+    }
+
+    const deletedCourse = await prisma.course.delete({
+      where: {
+        id: courseId,
+      },
+    });
+
+    return deletedCourse;
+  } catch (error: any) {
+    console.log('[COURSES DELETE]', error);
+    throw new Error(error.message);
+  }
+}
