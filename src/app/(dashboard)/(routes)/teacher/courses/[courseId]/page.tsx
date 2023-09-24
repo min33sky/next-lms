@@ -67,7 +67,7 @@ export default async function CourseIdPage({ params }: CourseIdPageProps) {
     course.imageUrl,
     course.price,
     course.categoryId,
-    course.chapters.some((chapter) => chapter.isPublished),
+    course.chapters.every((chapter) => chapter.isPublished),
   ];
 
   // 강의 등록에 필요한 속성들을 파악한다.
@@ -77,6 +77,10 @@ export default async function CourseIdPage({ params }: CourseIdPageProps) {
   const completionText = `(${completedFields}/${totalFields})`;
 
   const isComplete = requiredFields.every(Boolean);
+
+  console.log('퍼블리시? : ', course.isPublished);
+  // console.log('requiredFields', requiredFields);
+  // console.log('isComplete', isComplete);
 
   return (
     <>
@@ -91,6 +95,8 @@ export default async function CourseIdPage({ params }: CourseIdPageProps) {
               Complete all fields {completionText}
             </span>
           </div>
+
+          {/* Actions button */}
           <Actions
             disabled={!isComplete}
             courseId={course.id}

@@ -37,11 +37,9 @@ export default function Actions({
       setIsLoading(true);
 
       if (isPublished) {
-        // await axios.patch(`/api/courses/${courseId}/unpublish`);
         await unpublishCourse({ courseId });
         toast.success('Course unpublished');
       } else {
-        // await axios.patch(`/api/courses/${courseId}/publish`);
         await publishCourse({ courseId });
         toast.success('Course published');
         confetti.onOpen();
@@ -60,7 +58,6 @@ export default function Actions({
       setIsLoading(true);
 
       await deleteCourse({ courseId });
-      // await axios.delete(`/api/courses/${courseId}`);
 
       toast.success('Course deleted');
       router.refresh();
@@ -71,6 +68,9 @@ export default function Actions({
       setIsLoading(false);
     }
   };
+
+  console.log('disabled', disabled);
+  console.log('isLoading', isLoading);
 
   return (
     <div className="flex items-center gap-x-2">

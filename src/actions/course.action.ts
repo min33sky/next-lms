@@ -438,24 +438,25 @@ export async function unpublishChapter({
       },
     });
 
+    // ! chapter를 unpublish하면 course가 unpublished가 되는게 맞지;;
     // 2. 해당 강의의 모든 chapter가 published가 되지 않았다면 해당 강의는 unpublished로 변경
-    const publishedChaptersInCourse = await prisma.chapter.findMany({
+    // const publishedChaptersInCourse = await prisma.chapter.findMany({
+    //   where: {
+    //     courseId,
+    //     isPublished: true,
+    //   },
+    // });
+
+    // if (!publishedChaptersInCourse.length) {
+    await prisma.course.update({
       where: {
-        courseId,
-        isPublished: true,
+        id: courseId,
+      },
+      data: {
+        isPublished: false,
       },
     });
-
-    if (publishedChaptersInCourse.length === 0) {
-      await prisma.course.update({
-        where: {
-          id: courseId,
-        },
-        data: {
-          isPublished: false,
-        },
-      });
-    }
+    // }
 
     return unpublishedChapter;
   } catch (error: any) {
@@ -531,7 +532,7 @@ export async function deleteChapter({
       },
     });
 
-    if (publishedChaptersInCourse.length === 0) {
+    if (!publishedChaptersInCourse.length) {
       await prisma.course.update({
         where: {
           id: courseId,
