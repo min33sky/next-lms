@@ -5,8 +5,8 @@ import prisma from '@/lib/db';
 import { auth } from '@clerk/nextjs';
 
 const { Video } = new Mux(
-  process.env.MUX_TOKEN_ID!,
-  process.env.MUX_TOKEN_SECRET!,
+  process.env.MUX_TOKEN_ID,
+  process.env.MUX_TOKEN_SECRET,
 );
 
 /**
