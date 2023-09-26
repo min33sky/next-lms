@@ -3,6 +3,7 @@ import { CourseWithChaptersWithUserProgress } from '@/types';
 import { auth } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
 import CourseSidebarItem from './course-sidebar-item';
+import CourseProgress from '@/components/course-progress';
 
 interface CourseSidebarProps {
   course: CourseWithChaptersWithUserProgress;
@@ -33,6 +34,11 @@ export default async function CourseSidebar({
       <div className="p-8 flex flex-col border-b">
         <h1 className="font-semibold">{course.title}</h1>
         {/* Check purchase and add progress */}
+        {purchase && (
+          <div className="mt-10">
+            <CourseProgress variant="success" value={progressCount} />
+          </div>
+        )}
       </div>
       <div className="flex flex-col w-full">
         {course.chapters.map((chapter) => (
