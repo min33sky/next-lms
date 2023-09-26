@@ -1,5 +1,31 @@
-import React from 'react';
+import prisma from '@/lib/db';
+import { redirect } from 'next/navigation';
 
-export default function CourseIdPage() {
-  return <div>Watch the course</div>;
+export default async function CourseIdPage({
+  params,
+}: {
+  params: { courseId: string };
+}) {
+  const course = await prisma.course.findUnique({
+    where: {
+      id: params.courseId,
+    },
+    include: {
+      chapters: {
+        where: {
+          isPublished: true,
+        },
+        orderBy: {
+          position: 'asc',
+        },
+      },
+    },
+  });
+
+  if (!course) {
+    return redirect('/');
+  }
+
+  //? 현재 강의의 첫번째 챕터 페이지로 이동
+  return redirect(`/courses/${course.id}/chapters/${course.chapters[0].id}`);
 }
