@@ -78,10 +78,6 @@ export default async function CourseIdPage({ params }: CourseIdPageProps) {
 
   const isComplete = requiredFields.every(Boolean);
 
-  console.log('퍼블리시? : ', course.isPublished);
-  // console.log('requiredFields', requiredFields);
-  // console.log('isComplete', isComplete);
-
   return (
     <>
       {!course.isPublished && (
