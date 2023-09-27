@@ -3,6 +3,7 @@
 import Mux from '@mux/mux-node';
 import prisma from '@/lib/db';
 import { auth } from '@clerk/nextjs';
+import { isTeacher } from '@/lib/teacher';
 
 const { Video } = new Mux(
   process.env.MUX_TOKEN_ID,
@@ -16,7 +17,7 @@ export async function createCourse(title: string) {
   try {
     const { userId } = auth();
 
-    if (!userId) {
+    if (!userId || !!isTeacher(userId)) {
       throw new Error('Unauthorized');
     }
 
