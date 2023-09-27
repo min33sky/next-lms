@@ -1,14 +1,9 @@
 import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import type { Metadata } from 'next';
-import { Noto_Sans_KR } from 'next/font/google';
 import { ToastProvider } from '@/components/providers/toast-provider';
 import ConfettiProvider from '@/components/providers/confetti-provider';
-
-// const sans = Noto_Sans_KR({
-//   subsets: ['latin'],
-//   weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-// });
+import { ThemeProvider } from '@/components/providers/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Next LMS',
@@ -22,11 +17,18 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="ko">
+      <html lang="ko" suppressHydrationWarning>
         <body className={''}>
           <ConfettiProvider />
           <ToastProvider />
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

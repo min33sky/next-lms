@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { LogOutIcon } from 'lucide-react';
 import SearchInput from './search-input';
 import { isTeacher } from '@/lib/teacher';
+import { ThemeToggle } from './theme-toggle';
 
 export const NavbarRoutes = () => {
   const { userId } = useAuth();
@@ -37,6 +38,7 @@ export const NavbarRoutes = () => {
           </Button>
         ) : null}
 
+        <ThemeToggle />
         <UserButton afterSignOutUrl="/" />
       </div>
     </>
